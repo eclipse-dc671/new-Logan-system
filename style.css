@@ -1,52 +1,336 @@
-/* बैकग्राउंड वॉलपेपर को सही साइज में फिट करना */
-.wallpaper-layer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-image: 
-    linear-gradient(180deg, rgba(5,7,10,0.65) 0%, rgba(5,7,10,0.85) 100%),
-    url("cat.jpg");
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  z-index: -2; /* कार्ड और इनपुट्स के बिल्कुल पीछे रखने के लिए */
-  pointer-events: none;
+:root {
+  --bg: #05070a;
+  --theme: #00ff66;
+  --theme-glow: rgba(0, 255, 102, 0.4);
+  --text: #f3f1ec;
+  --muted: #8d8b86;
+  --field: rgba(255, 255, 255, 0.05);
+  --line: rgba(255, 255, 255, 0.12);
 }
 
-/* ड्रैगन मोड */
-.wallpaper-layer.dragon-mode {
-  background-image: 
-    linear-gradient(180deg, rgba(5,7,10,0.55) 0%, rgba(5,7,10,0.85) 100%),
-    url("dragon.gif");
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* एनीमेशन कैनवस */
-#animCanvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1; /* वॉलपेपर के ऊपर और कार्ड के पीछे */
-  pointer-events: none;
-  background: transparent !important;
-}
-
-/* कार्ड को हमेशा सबसे ऊपर दिखाना */
-.portal-card-box {
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  padding: 80px 16px 30px;
   position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 440px;
-  margin: auto;
 }
 
-.top-nav {
+/* बैकग्राउंड कैनवस */
+#canvasBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ऊपर का कलर बार */
+.color-bar {
   position: fixed;
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 30; /* कलर बार सबसे ऊपर रहे */
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 14, 18, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.palette {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.dot:hover {
+  transform: scale(1.15);
+}
+
+.dot.active {
+  border-color: #fff;
+  box-shadow: 0 0 10px var(--theme);
+}
+
+.custom-picker {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(#f44, #fd4, #4f6, #4df, #84f, #f4a, #f44);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+}
+
+.custom-picker input {
+  position: absolute;
+  inset: -10px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* कट-कॉर्नर कार्ड */
+.card-stage {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 440px;
+}
+
+.card-border {
+  padding: 1px;
+  clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.06) 40%, var(--theme));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  transition: background 0.3s;
+}
+
+.card-body {
+  clip-path: polygon(29px 0, 100% 0, 100% calc(100% - 29px), calc(100% - 29px) 100%, 0 100%, 0 29px);
+  background: linear-gradient(160deg, rgba(16, 22, 28, 0.85), rgba(6, 8, 10, 0.95));
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  padding: 34px 28px 28px;
+}
+
+h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+h1 span {
+  color: var(--theme);
+  transition: color 0.3s;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 0 22px;
+  line-height: 1.5;
+}
+
+/* इनपुट फ़ील्ड्स */
+.field-group {
+  margin-bottom: 14px;
+}
+
+label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #cfcdc8;
+  margin-bottom: 6px;
+}
+
+.field-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-wrap input {
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--text);
+  font-size: 14px;
+  padding: 0 42px 0 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field-wrap input:focus {
+  border-color: var(--theme);
+  box-shadow: 0 0 14px var(--theme-glow);
+}
+
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 14px 0 18px;
+}
+
+.check-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.check-wrap input {
+  accent-color: var(--theme);
+}
+
+.forgot-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.forgot-link:hover {
+  color: var(--theme);
+}
+
+/* सबमिट बटन */
+.cta-btn {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 11px;
+  background: var(--theme);
+  color: #050707;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 0 25px var(--theme-glow);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 35px var(--theme-glow);
+}
+
+/* डिवाइडर & सोशल ग्रिड */
+.divider {
+  text-align: center;
+  margin: 20px 0 14px;
+  color: #6a6862;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.divider::before, .divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+}
+
+.social-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.social-btn {
+  height: 42px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.social-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.social-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.switch-auth {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 18px;
+}
+
+.switch-link {
+  color: var(--theme);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+/* टोस्ट */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
+  background: rgba(18, 20, 24, 0.95);
+  border: 1px solid var(--theme);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s, opacity 0.3s;
+  z-index: 100;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
