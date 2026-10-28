@@ -1,33 +1,52 @@
-/* बैकग्राउंड वॉलपेपर लेयर */
+/* बैकग्राउंड वॉलपेपर को सही साइज में फिट करना */
 .wallpaper-layer {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   background-image: 
-    linear-gradient(180deg, rgba(5,7,10,0.4) 0%, rgba(5,7,10,0.75) 100%),
+    linear-gradient(180deg, rgba(5,7,10,0.65) 0%, rgba(5,7,10,0.85) 100%),
     url("cat.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  z-index: 0;
+  z-index: -2; /* कार्ड और इनपुट्स के बिल्कुल पीछे रखने के लिए */
+  pointer-events: none;
 }
 
-/* ड्रैगन GIF मोड */
+/* ड्रैगन मोड */
 .wallpaper-layer.dragon-mode {
   background-image: 
-    linear-gradient(180deg, rgba(5,7,10,0.3) 0%, rgba(5,7,10,0.7) 100%),
+    linear-gradient(180deg, rgba(5,7,10,0.55) 0%, rgba(5,7,10,0.85) 100%),
     url("dragon.gif");
 }
 
-/* एनीमेशन कैनवस को पारदर्शी (Transparent) रखना */
+/* एनीमेशन कैनवस */
 #animCanvas {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 2;
+  z-index: -1; /* वॉलपेपर के ऊपर और कार्ड के पीछे */
   pointer-events: none;
   background: transparent !important;
+}
+
+/* कार्ड को हमेशा सबसे ऊपर दिखाना */
+.portal-card-box {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+}
+
+.top-nav {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30; /* कलर बार सबसे ऊपर रहे */
 }
