@@ -3,22 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eclipse Portal</title>
+  <title>Eclipse Portal — Executive Access</title>
   
-  <!-- Italian Style Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@1,400;1,500;1,600&display=swap" rel="stylesheet">
   
   <style>
+    /* =========================================
+       1. वेरिएबल्स और थीम्स (Dark & Light Mode)
+    ========================================= */
     :root {
-      --bg: #05070a;
       --theme: #00ff66;
       --theme-glow: rgba(0, 255, 102, 0.4);
+      --bg: #05070a;
+      --card-bg: linear-gradient(160deg, rgba(16, 22, 28, 0.88), rgba(6, 8, 10, 0.96));
       --text: #f3f1ec;
       --muted: #8d8b86;
       --field: rgba(255, 255, 255, 0.05);
+      --field-text: #ffffff;
       --line: rgba(255, 255, 255, 0.12);
+      --card-border-grad: linear-gradient(150deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.06) 40%, var(--theme));
+      --canvas-grad-1: #040608;
+      --canvas-grad-2: #070a0e;
+      --canvas-grad-3: #030507;
+      --snow-color: rgba(255, 255, 255, 0.7);
+    }
+
+    body.light-mode {
+      --bg: #f5f7fa;
+      --card-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.88), rgba(240, 243, 248, 0.95));
+      --text: #0d1218;
+      --muted: #5e6573;
+      --field: rgba(0, 0, 0, 0.04);
+      --field-text: #0e1318;
+      --line: rgba(0, 0, 0, 0.1);
+      --card-border-grad: linear-gradient(150deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.03) 40%, var(--theme));
+      --canvas-grad-1: #eef2f6;
+      --canvas-grad-2: #e3e8ee;
+      --canvas-grad-3: #f9fbfd;
+      --snow-color: rgba(60, 75, 95, 0.35);
     }
 
     * {
@@ -26,7 +50,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-style: italic; /* पूरी राइटिंग इटालियन स्टाइल */
+      font-style: italic; /* लक्ज़री इटालियन टच */
     }
 
     body {
@@ -37,8 +61,10 @@
       justify-content: center;
       align-items: center;
       overflow-x: hidden;
-      padding: 80px 16px 30px;
+      padding: 85px 16px 30px;
+      perspective: 1200px;
       position: relative;
+      transition: background 0.4s ease, color 0.4s ease;
     }
 
     #canvasBg {
@@ -51,22 +77,105 @@
       pointer-events: none;
     }
 
-    .color-bar {
+    /* =========================================
+       2. टॉप नेविगेशन और स्पिनिंग चक्र
+    ========================================= */
+    .top-controls {
       position: fixed;
       top: 16px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 20;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* स्पिनिंग चक्र (Color Wheel Button) */
+    .chakri-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: conic-gradient(#ff3b4e, #ffe627, #00ff66, #22d3ee, #a855f7, #ff7eb6, #ff3b4e);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 16px var(--theme-glow), 0 4px 15px rgba(0,0,0,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .chakri-btn:hover {
+      transform: rotate(180deg) scale(1.1);
+    }
+
+    .chakri-btn-inner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--bg);
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+    }
+
+    /* लाइट / डार्क मोड टॉगल बटन */
+    .mode-switch-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(15, 20, 25, 0.7);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--line);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    .mode-switch-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .mode-switch-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* टॉप से स्लाइड होने वाला कलर पैनल */
+    .color-panel {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-25px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 55;
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(10, 14, 18, 0.7);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 8px 16px;
+      background: rgba(12, 17, 23, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 10px 18px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+
+    .color-panel.open {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .palette {
@@ -84,7 +193,7 @@
     }
 
     .dot:hover {
-      transform: scale(1.15);
+      transform: scale(1.18);
     }
 
     .dot.active {
@@ -99,7 +208,7 @@
       position: relative;
       overflow: hidden;
       background: conic-gradient(#f44, #fd4, #4f6, #4df, #84f, #f4a, #f44);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
       cursor: pointer;
     }
 
@@ -110,32 +219,51 @@
       cursor: pointer;
     }
 
+    /* =========================================
+       3. कट-कॉर्नर कार्ड और 3D क्लोज एनिमेशन
+    ========================================= */
     .card-stage {
       position: relative;
       z-index: 10;
       width: 100%;
       max-width: 440px;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+    }
+
+    .card-stage.closing {
+      transform: scale(0.3) rotateX(70deg) rotateZ(10deg);
+      opacity: 0;
     }
 
     .card-border {
       padding: 1px;
       clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
-      background: linear-gradient(150deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.06) 40%, var(--theme));
+      background: var(--card-border-grad);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
       transition: background 0.3s;
     }
 
     .card-body {
       clip-path: polygon(29px 0, 100% 0, 100% calc(100% - 29px), calc(100% - 29px) 100%, 0 100%, 0 29px);
-      background: linear-gradient(160deg, rgba(16, 22, 28, 0.85), rgba(6, 8, 10, 0.95));
-      backdrop-filter: blur(24px) saturate(1.2);
-      -webkit-backdrop-filter: blur(24px) saturate(1.2);
+      background: var(--card-bg);
+      backdrop-filter: blur(26px) saturate(1.2);
+      -webkit-backdrop-filter: blur(26px) saturate(1.2);
       padding: 34px 28px 28px;
+      transition: background 0.3s ease;
+    }
+
+    .card-inner {
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .card-inner.fade-out {
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
     }
 
     h1 {
       font-family: 'Playfair Display', serif;
-      font-style: italic;
       font-size: 32px;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -161,7 +289,7 @@
       display: block;
       font-size: 12.5px;
       font-weight: 500;
-      color: #cfcdc8;
+      color: var(--muted);
       margin-bottom: 6px;
     }
 
@@ -177,9 +305,9 @@
       border-radius: 12px;
       border: 1px solid var(--line);
       background: var(--field);
-      color: var(--text);
+      color: var(--field-text);
       font-size: 14px;
-      padding: 0 42px 0 14px;
+      padding: 0 46px 0 14px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
@@ -189,14 +317,35 @@
       box-shadow: 0 0 14px var(--theme-glow);
     }
 
+    /* मॉडर्न ट्रांसपेरेंट आई बटन */
     .eye-btn {
       position: absolute;
       right: 12px;
-      background: none;
+      background: transparent;
       border: none;
       cursor: pointer;
       color: var(--muted);
-      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .eye-btn:hover {
+      color: var(--theme);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .eye-btn svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .meta {
@@ -258,7 +407,7 @@
     .divider {
       text-align: center;
       margin: 20px 0 14px;
-      color: #6a6862;
+      color: var(--muted);
       font-size: 10.5px;
       letter-spacing: 0.12em;
       display: flex;
@@ -296,8 +445,8 @@
     }
 
     .social-btn:hover {
-      background: rgba(255, 255, 255, 0.09);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--theme);
     }
 
     .social-btn svg {
@@ -346,85 +495,110 @@
 </head>
 <body>
 
+  <!-- बैकग्राउंड एनीमेशन कैनवस -->
   <canvas id="canvasBg"></canvas>
 
-  <header class="color-bar">
+  <!-- ऊपर के फ्लोटिंग कंट्रोल्स (चकरी + लाइट/डार्क स्विच) -->
+  <div class="top-controls">
+    <!-- कलर व्हील चक्र -->
+    <div class="chakri-btn" id="chakriTrigger" onclick="toggleColorPanel()" title="Click to open color wheel">
+      <div class="chakri-btn-inner"></div>
+    </div>
+
+    <!-- लाइट और डार्क मोड टॉगल -->
+    <button class="mode-switch-btn" id="themeModeBtn" onclick="toggleThemeMode()" title="Toggle Light / Dark Mode">
+      <!-- Sun Icon (डार्क में दिखेगा) -->
+      <svg id="sunIcon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      <!-- Moon Icon (लाइट में दिखेगा) -->
+      <svg id="moonIcon" viewBox="0 0 24 24" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+  </div>
+
+  <!-- ऊपर टॉप से स्लाइड होकर खुलने वाला कलर पैलेट -->
+  <header class="color-panel" id="colorPanel">
     <div class="palette" id="themePalette"></div>
     <label class="custom-picker" title="Pick any custom color">
       <input type="color" id="customColorInput" value="#00ff66">
     </label>
   </header>
 
-  <main class="card-stage">
+  <!-- कट-कॉर्नर कार्ड -->
+  <main class="card-stage" id="mainCard">
     <div class="card-border">
       <section class="card-body">
         
-        <h1 id="titleText">Welcome <span>Back</span></h1>
-        <p class="sub" id="subText">Enter your credentials to access your secure account</p>
+        <div class="card-inner" id="cardContent">
+          <h1 id="titleText">Welcome <span>Back</span></h1>
+          <p class="sub" id="subText">Enter your credentials to access your secure account</p>
 
-        <form id="authForm" onsubmit="submitForm(event)">
-          
-          <div class="field-group" id="nameGroup" style="display: none;">
-            <label for="userName">Full Name</label>
-            <div class="field-wrap">
-              <input type="text" id="userName" placeholder="Alex Johnson">
+          <form id="authForm" onsubmit="submitForm(event)">
+            
+            <div class="field-group" id="nameGroup" style="display: none;">
+              <label for="userName">Full Name</label>
+              <div class="field-wrap">
+                <input type="text" id="userName" placeholder="Alex Johnson">
+              </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <label for="userEmail">Email Address</label>
-            <div class="field-wrap">
-              <input type="email" id="userEmail" placeholder="name@domain.com" required>
+            <div class="field-group">
+              <label for="userEmail">Email Address</label>
+              <div class="field-wrap">
+                <input type="email" id="userEmail" placeholder="name@domain.com" required>
+              </div>
             </div>
-          </div>
 
-          <div class="field-group">
-            <label for="userPassword">Password</label>
-            <div class="field-wrap">
-              <input type="password" id="userPassword" placeholder="••••••••" required>
-              <button type="button" class="eye-btn" onclick="togglePass('userPassword')">👁️</button>
+            <div class="field-group">
+              <label for="userPassword">Password</label>
+              <div class="field-wrap">
+                <input type="password" id="userPassword" placeholder="••••••••" required>
+                <!-- ट्रांसपेरेंट मॉडर्न आई बटन -->
+                <button type="button" class="eye-btn" onclick="togglePass('userPassword')" id="eyeToggleBtn" title="Show/Hide Password">
+                  <svg id="eyeShowIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <svg id="eyeHideIcon" viewBox="0 0 24 24" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </button>
+              </div>
             </div>
+
+            <div class="meta">
+              <label class="check-wrap">
+                <input type="checkbox" id="rememberBox" checked> Remember me
+              </label>
+              <button type="button" class="forgot-link" id="forgotBtn" onclick="forgotPassword()">Forgot password?</button>
+            </div>
+
+            <button type="submit" class="cta-btn" id="submitBtn">
+              Sign In ➔
+            </button>
+          </form>
+
+          <div class="divider">OR CONTINUE WITH</div>
+
+          <div class="social-grid">
+            <button type="button" class="social-btn" onclick="connectSocial('Google')">
+              <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8a6 6 0 0 1 0-12c1.9 0 3.1.8 3.8 1.5l2.6-2.5A9.6 9.6 0 0 0 12 2.4a9.6 9.6 0 1 0 0 19.2c5.5 0 9.2-3.9 9.2-9.3 0-.6-.1-1.1-.2-1.6H12Z"/></svg>
+              Google
+            </button>
+
+            <button type="button" class="social-btn" onclick="connectSocial('Apple')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.64-.78 1.08-1.86.96-2.95-1 .04-2.13.66-2.8 1.45-.58.68-1.1 1.77-.96 2.84 1.11.09 2.17-.56 2.8-1.34z"/></svg>
+              Apple
+            </button>
+
+            <button type="button" class="social-btn" onclick="connectSocial('Discord')">
+              <svg viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+              Discord
+            </button>
+
+            <button type="button" class="social-btn" onclick="connectSocial('GitHub')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              GitHub
+            </button>
           </div>
 
-          <div class="meta">
-            <label class="check-wrap">
-              <input type="checkbox" id="rememberBox" checked> Remember me
-            </label>
-            <button type="button" class="forgot-link" id="forgotBtn" onclick="forgotPassword()">Forgot password?</button>
+          <div class="switch-auth">
+            <span id="switchPrompt">Don't have an account?</span>
+            <button type="button" class="switch-link" id="switchBtn" onclick="toggleModeAnimated()">Sign Up</button>
           </div>
-
-          <button type="submit" class="cta-btn" id="submitBtn">
-            Sign In ➔
-          </button>
-        </form>
-
-        <div class="divider">OR CONTINUE WITH</div>
-
-        <div class="social-grid">
-          <button type="button" class="social-btn" onclick="connectSocial('Google')">
-            <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8a6 6 0 0 1 0-12c1.9 0 3.1.8 3.8 1.5l2.6-2.5A9.6 9.6 0 0 0 12 2.4a9.6 9.6 0 1 0 0 19.2c5.5 0 9.2-3.9 9.2-9.3 0-.6-.1-1.1-.2-1.6H12Z"/></svg>
-            Google
-          </button>
-
-          <button type="button" class="social-btn" onclick="connectSocial('Apple')">
-            <svg viewBox="0 0 24 24" fill="#ffffff"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.64-.78 1.08-1.86.96-2.95-1 .04-2.13.66-2.8 1.45-.58.68-1.1 1.77-.96 2.84 1.11.09 2.17-.56 2.8-1.34z"/></svg>
-            Apple
-          </button>
-
-          <button type="button" class="social-btn" onclick="connectSocial('Discord')">
-            <svg viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-            Discord
-          </button>
-
-          <button type="button" class="social-btn" onclick="connectSocial('GitHub')">
-            <svg viewBox="0 0 24 24" fill="#ffffff"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-            GitHub
-          </button>
-        </div>
-
-        <div class="switch-auth">
-          <span id="switchPrompt">Don't have an account?</span>
-          <button type="button" class="switch-link" id="switchBtn" onclick="toggleMode()">Sign Up</button>
         </div>
 
       </section>
@@ -434,161 +608,9 @@
   <div class="toast" id="toastBox"></div>
 
   <script>
+    /* =========================================================
+       1. कलर पैलेट और चकरी ट्रिगर
+    ========================================================= */
     const colors = [
       '#a0c0d0', '#ff7eb6', '#ff3b4e', '#ffffff', '#ffe627', 
-      '#ff9f43', '#00ff66', '#22d3ee', '#a855f7'
-    ];
-
-    let currentHex = '#00ff66';
-
-    function initColors() {
-      const box = document.getElementById('themePalette');
-      box.innerHTML = '';
-      colors.forEach(hex => {
-        const d = document.createElement('div');
-        d.className = 'dot' + (hex === currentHex ? ' active' : '');
-        d.style.backgroundColor = hex;
-        d.onclick = () => applyTheme(hex, d);
-        box.appendChild(d);
-      });
-
-      document.getElementById('customColorInput').oninput = (e) => {
-        applyTheme(e.target.value, null);
-      };
-    }
-
-    function applyTheme(hex, targetDot) {
-      currentHex = hex;
-      document.documentElement.style.setProperty('--theme', hex);
-      document.documentElement.style.setProperty('--theme-glow', hex + '55');
-
-      document.querySelectorAll('.dot').forEach(el => el.classList.remove('active'));
-      if (targetDot) targetDot.classList.add('active');
-    }
-
-    initColors();
-
-    let isSignup = false;
-
-    function toggleMode() {
-      isSignup = !isSignup;
-      
-      const title = document.getElementById('titleText');
-      const sub = document.getElementById('subText');
-      const nameGrp = document.getElementById('nameGroup');
-      const submitBtn = document.getElementById('submitBtn');
-      const prompt = document.getElementById('switchPrompt');
-      const link = document.getElementById('switchBtn');
-      const forgot = document.getElementById('forgotBtn');
-
-      if (isSignup) {
-        title.innerHTML = 'Create <span>Account</span>';
-        sub.textContent = 'Join Eclipse today to access your secure workspace';
-        nameGrp.style.display = 'block';
-        submitBtn.innerHTML = 'Create Account ➔';
-        prompt.textContent = 'Already have an account?';
-        link.textContent = 'Sign In';
-        forgot.style.display = 'none';
-      } else {
-        title.innerHTML = 'Welcome <span>Back</span>';
-        sub.textContent = 'Enter your credentials to access your secure account';
-        nameGrp.style.display = 'none';
-        submitBtn.innerHTML = 'Sign In ➔';
-        prompt.textContent = "Don't have an account?";
-        link.textContent = 'Sign Up';
-        forgot.style.display = 'block';
-      }
-    }
-
-    function togglePass(id) {
-      const input = document.getElementById(id);
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('toastBox');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
-    }
-
-    function forgotPassword() {
-      showToast('Password reset link sent to your email.');
-    }
-
-    function submitForm(e) {
-      e.preventDefault();
-      showToast(isSignup ? 'Account created successfully!' : 'Signed in successfully!');
-    }
-
-    function connectSocial(platform) {
-      showToast('Connecting with ' + platform + '…');
-    }
-
-    const cv = document.getElementById('canvasBg');
-    const cx = cv.getContext('2d');
-    let W, H, step = 0;
-
-    function resize() {
-      W = cv.width = window.innerWidth;
-      H = cv.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    const snowList = [];
-    for (let i = 0; i < 75; i++) {
-      snowList.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: Math.random() * 2 + 1,
-        vy: Math.random() * 1.2 + 0.4,
-        vx: Math.random() * 0.6 - 0.3,
-        a: Math.random() * 0.7 + 0.2
-      });
-    }
-
-    function renderCanvas() {
-      step += 0.015;
-      cx.clearRect(0, 0, W, H);
-
-      const grad = cx.createLinearGradient(0, 0, W, H);
-      grad.addColorStop(0, '#040608');
-      grad.addColorStop(0.5, '#070a0e');
-      grad.addColorStop(1, '#030507');
-      cx.fillStyle = grad;
-      cx.fillRect(0, 0, W, H);
-
-      cx.beginPath();
-      for (let x = -20; x <= W + 20; x += 20) {
-        const y = H * 0.48 + Math.sin(x * 0.003 + step) * 55 + Math.cos(x * 0.002 - step) * 35;
-        x === -20 ? ctx.moveTo(x, y) : cx.lineTo(x, y);
-      }
-      cx.strokeStyle = currentHex + '44';
-      cx.lineWidth = 2.5;
-      cx.shadowColor = currentHex;
-      cx.shadowBlur = 10;
-      cx.stroke();
-      cx.shadowBlur = 0;
-
-      for (let s of snowList) {
-        cx.beginPath();
-        cx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        cx.fillStyle = `rgba(255, 255, 255, ${s.a})`;
-        cx.fill();
-
-        s.y += s.vy;
-        s.x += s.vx;
-
-        if (s.y > H) {
-          s.y = -5;
-          s.x = Math.random() * W;
-        }
-      }
-
-      requestAnimationFrame(renderCanvas);
-    }
-    renderCanvas();
-  </script>
-</body>
-</html>
+      '#ff9f43', '#00ff66', '#22d3ee'
